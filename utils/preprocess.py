@@ -29,7 +29,8 @@ def remove_html(text):
     html = re.compile(r'<.*?>')
     return html.sub(r'',text)
 
-def preprocess(dataframe):
+def preprocess(filename):
+    dataframe = pd.read_csv(filename)
     dataframe['text'] = dataframe['text'].apply(lambda x:remove_emoji(x))
     dataframe['text'] = dataframe['text'].apply(lambda x:remove_punc(x))
     dataframe['text'] = dataframe['text'].apply(lambda x:remove_emoji(x))

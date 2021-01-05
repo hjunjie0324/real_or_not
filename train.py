@@ -7,7 +7,7 @@ from torch.utils.data import Dataset
 from utils import preprocess
 from model.bertClassifier import BertClassifier
 
-class RealoOrNotDataset(Dataset):
+class RealOrNotDataset(Dataset):
     def __init__(self,encodings):
         self.encodings = encodings
     def __getitem__(self,idx):
@@ -17,29 +17,30 @@ class RealoOrNotDataset(Dataset):
 
 
 def train(encodings,dataloader,optimizer,model,device, num_epoches):
-    for epoch in num_epoches:
+    model.train()
+    for epoch in range(num_epoches):
         for batch in dataloader:
             input_ids = batch['input_ids'].to(device)
             attention_mask = batch['attention_mask'].to(device)
             target = batch['target'].to(device)
 
-            outputs = model(input_ids, attention_mask, target)
-            loss = outputs[0]
+            output = model(input_ids, attention_mask, target)
+            loss_func = nn.CrossEntropyLoss()
+            loss = loss_func(output, target)
             loss.backward()
             optimizer.step()
 
     torch.save(model.state_dict(),"bertClassifier.pt")
 
 
-def main():
+if __name__ == "__main__":
     dataset_name = "train.csv"
     encodings = preprocess.preprocess(dataset_name)
-    train_dataset = RealoOrNotDataset(encodings)
+    train_dataset = RealOrNotDataset(encodings)
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     model = BertClassifier()
     model.to(device)
-    parameters = model.parameters
-    optimizer = optim.Adam(parameters, lr=1e-5)
+    optimizer = optim.Adam(model.parameters(), lr=1e-5)
     dataloader = DataLoader(train_dataset,batch_size=4,shuffle=True)
     num_epoches = 3
     train(encodings, dataloader, optimizer, model, device, num_epoches)
