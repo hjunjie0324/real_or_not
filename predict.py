@@ -8,30 +8,34 @@ from model.bertClassifier import BertClassifier
 from train import RealOrNotDataset
 import pandas as pd
 
-def predict(test_dataset,midel,device):
+def predict(test_dataset):
+    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+    model = BertClassifier()
+    model.to(device)
+    model.train()
+    model.load_state_dict(torch.load('bertClassifier.pt'))
+    model.eval()
+
     n = len(test_dataset)
     prediction_list = []
     for i in range(n):
         input_ids = test_dataset[i]['input_ids'].to(device)
         attention_mask = test_dataset[i]['attention_mask'].to(device)
         with torch.no_grad():
-            _, output = model(input_ids, attention_mask)
+            output = model(torch.unsqueeze(input_ids,0), torch.unsqueeze(attention_mask,0))
             pred = torch.argmax(output)
             prediction_list.append(pred)
+            print("output:",output)
+            print(".................")
     return prediction_list 
 
 
 if __name__ == "__main__":
     dataset_name = "test.csv"
-    encodings = preprocess.preprocess(dataset_name)
+    encodings = preprocess.preprocess(dataset_name, train=False)
     test_dataset = RealOrNotDataset(encodings)
 
-    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-    model = BertClassifier()
-    model.load_state_dict(torch.load('bertClassifier.pt'))
-    model.to(device)
-    model.eval()
-    prediction = predict(test_dataset,model,device)
+    prediction = predict(test_dataset)
 
     sample_submission = pd.read_csv("sample_submission.csv")
     sample_submission["target"] = prediction

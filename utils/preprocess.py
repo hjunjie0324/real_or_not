@@ -29,7 +29,16 @@ def remove_html(text):
     html = re.compile(r'<.*?>')
     return html.sub(r'',text)
 
-def preprocess(filename):
+def padding_to_maxLength(encodings,max_length):
+    n = len(encodings['input_ids'])
+    for index in range(n):
+        length = len(encodings['input_ids'][index])
+        for insert_index in range(length, max_length):
+            encodings['input_ids'][index].insert(insert_index, 0)
+            encodings['attention_mask'][index].insert(insert_index,0) 
+
+
+def preprocess(filename, train=True):
     dataframe = pd.read_csv(filename)
     dataframe['text'] = dataframe['text'].apply(lambda x:remove_emoji(x))
     dataframe['text'] = dataframe['text'].apply(lambda x:remove_punc(x))
@@ -39,8 +48,11 @@ def preprocess(filename):
     text = dataframe['text'].tolist()
     tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
     encodings = tokenizer(text, truncation = True, padding = True)
-    target = dataframe['target'].tolist()
-    encodings.update({'target':target})
+    max_length = 60
+    padding_to_maxLength(encodings,max_length)
+    if(train == True):
+        target = dataframe['target'].tolist()
+        encodings.update({'target':target})
 
     return encodings
 

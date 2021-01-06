@@ -20,6 +20,7 @@ def train(encodings,dataloader,optimizer,model,device, num_epoches):
     model.train()
     for epoch in range(num_epoches):
         for batch in dataloader:
+            optimizer.zero_grad()
             input_ids = batch['input_ids'].to(device)
             attention_mask = batch['attention_mask'].to(device)
             target = batch['target'].to(device)
@@ -29,7 +30,7 @@ def train(encodings,dataloader,optimizer,model,device, num_epoches):
             loss = loss_func(output, target)
             loss.backward()
             optimizer.step()
-
+    model.eval()
     torch.save(model.state_dict(),"bertClassifier.pt")
 
 
@@ -40,7 +41,8 @@ if __name__ == "__main__":
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     model = BertClassifier()
     model.to(device)
-    optimizer = optim.Adam(model.parameters(), lr=1e-5)
-    dataloader = DataLoader(train_dataset,batch_size=4,shuffle=True)
-    num_epoches = 3
+    optimizer = optim.Adam(model.parameters(), lr=3e-5)
+    dataloader = DataLoader(train_dataset,batch_size=16,shuffle=True)
+    num_epoches = 4
     train(encodings, dataloader, optimizer, model, device, num_epoches)
+
