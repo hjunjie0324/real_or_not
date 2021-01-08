@@ -37,7 +37,7 @@ def predict(test_dataset, threshold):
 
 if __name__ == "__main__":
     dataset_name = "test.csv"
-    encodings = preprocess.preprocess_for_test(dataset_name)
+    encodings = preprocess.preprocess(filename = dataset_name, train = False)
     test_dataset = RealOrNotDataset(encodings)
 
     threshold = 0.9

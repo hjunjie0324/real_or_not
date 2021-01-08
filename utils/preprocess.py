@@ -40,7 +40,7 @@ def padding_to_maxLength(encodings,max_length):
             encodings['attention_mask'][index].insert(insert_index,0) 
 
 
-def preprocess(filename):
+def preprocess(filename, train = True):
     dataframe = pd.read_csv(filename)
     dataframe['text'] = dataframe['text'].apply(lambda x:remove_emoji(x))
     dataframe['text'] = dataframe['text'].apply(lambda x:remove_punc(x))
@@ -50,36 +50,14 @@ def preprocess(filename):
     text = dataframe['text'].tolist()
     target = dataframe['text'].tolist()
 
-   
-    #split data
-    text_train, text_val, target_train, target_val = train_test_split(text, target, test_size = 0.1)
-
-    tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
-    train_encodings = tokenizer(text_train, truncation = True, padding = True)
-    max_length = 60
-    padding_to_maxLength(train_encodings,max_length)
-
-    val_encodings = tokenizer(text_val, truncation = True, padding = True)
-    padding_to_maxLength(val_encodings, max_length)
-        
-    train_encodings.update({'target':target_train})
-    val_encodings.update({'target':target_val})
-    torch.save(val_encodings,'val_encodings.pt')
-    return train_encodings
-
-def preprocess_for_test(filename):
-    dataframe = pd.read_csv(filename)
-    dataframe['text'] = dataframe['text'].apply(lambda x:remove_emoji(x))
-    dataframe['text'] = dataframe['text'].apply(lambda x:remove_punc(x))
-    dataframe['text'] = dataframe['text'].apply(lambda x:remove_emoji(x))
-    dataframe['text'] = dataframe['text'].apply(lambda x:remove_html(x))
-    
-    text = dataframe['text'].tolist()
-
     tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
     encodings = tokenizer(text, truncation = True, padding = True)
     max_length = 60
     padding_to_maxLength(encodings,max_length)
+
+    if train == True:
+        target = dataframe['target'].tolist()
+        encodings.update({'target':target})
 
     return encodings
 
